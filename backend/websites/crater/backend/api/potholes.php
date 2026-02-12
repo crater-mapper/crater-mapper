@@ -19,7 +19,7 @@ function handlePotholes(?string $id, ?string $action, string $method): void
             echo json_encode(['error' => 'Method not allowed']);
             return;
         }
-        $userId = requireAuth();
+        $userId = getCurrentUserId() ?? 1; // Public: fall back to user 1
         $stmt = $pdo->prepare('SELECT id, user_id FROM potholes WHERE id = ?');
         $stmt->execute([$id]);
         $pothole = $stmt->fetch();
@@ -107,7 +107,7 @@ function handlePotholes(?string $id, ?string $action, string $method): void
                 echo json_encode(['error' => 'Not found']);
                 return;
             }
-            $userId = requireAuth();
+            $userId = getCurrentUserId() ?? 1; // Public: fall back to user 1
             $input = json_decode(file_get_contents('php://input'), true) ?? [];
             $latitude = (float) ($input['latitude'] ?? 0);
             $longitude = (float) ($input['longitude'] ?? 0);

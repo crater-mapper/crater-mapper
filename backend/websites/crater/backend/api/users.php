@@ -11,7 +11,7 @@ require_once __DIR__ . '/../db.php';
 function handleUsers(?string $action, string $method): void
 {
     if ($action === 'me' && $method === 'GET') {
-        $userId = requireAuth();
+        $userId = getCurrentUserId() ?? 1; // Public: fall back to user 1
         $pdo = getDb();
         $stmt = $pdo->prepare('SELECT id, username, email, reputation, created_at FROM users WHERE id = ?');
         $stmt->execute([$userId]);
