@@ -1,12 +1,15 @@
 <?php
 /**
- * Potholes API: list, get, create report, confirm (reputation)
+ * Potholes API: list, get, create, update, confirm (reputation)
  */
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../auth.php';
+
+// Points by size category
+const SIZE_POINTS = ['small' => 3, 'medium' => 8, 'large' => 12];
 
 function handlePotholes(?string $id, ?string $action, string $method): void
 {
@@ -19,7 +22,7 @@ function handlePotholes(?string $id, ?string $action, string $method): void
             echo json_encode(['error' => 'Method not allowed']);
             return;
         }
-        $userId = getCurrentUserId() ?? 1; // Public: fall back to user 1
+        $userId = getCurrentUserId() ?? 1;
         $stmt = $pdo->prepare('SELECT id, user_id FROM potholes WHERE id = ?');
         $stmt->execute([$id]);
         $pothole = $stmt->fetch();
@@ -45,7 +48,6 @@ function handlePotholes(?string $id, ?string $action, string $method): void
             }
             throw $e;
         }
-        // Waze-style: reporter gains reputation when someone confirms
         $pdo->prepare('UPDATE users SET reputation = reputation + 1 WHERE id = ?')->execute([$reporterId]);
         echo json_encode(['confirmed' => true, 'pothole_id' => (int) $id]);
         return;
@@ -55,7 +57,8 @@ function handlePotholes(?string $id, ?string $action, string $method): void
         case 'GET':
             if ($id !== null) {
                 $stmt = $pdo->prepare('
-                  SELECT p.id, p.user_id, p.latitude, p.longitude, p.size_category, p.diameter_cm, p.description, p.created_at, p.updated_at,
+                  SELECT p.id, p.user_id, p.latitude, p.longitude, p.size_category, p.description,
+                         p.points, p.verified, p.fixed, p.created_at, p.updated_at,
                          u.username AS reporter_username,
                          (SELECT COUNT(*) FROM pothole_confirmations c WHERE c.pothole_id = p.id) AS confirmation_count
                   FROM potholes p
@@ -73,10 +76,11 @@ function handlePotholes(?string $id, ?string $action, string $method): void
             } else {
                 $lat = isset($_GET['lat']) ? (float) $_GET['lat'] : null;
                 $lng = isset($_GET['lng']) ? (float) $_GET['lng'] : null;
-                $radius = isset($_GET['radius']) ? (float) $_GET['radius'] : null; // km, approximate
+                $radius = isset($_GET['radius']) ? (float) $_GET['radius'] : null;
                 if ($lat !== null && $lng !== null && $radius !== null && $radius > 0) {
                     $stmt = $pdo->prepare('
-                      SELECT p.id, p.user_id, p.latitude, p.longitude, p.size_category, p.diameter_cm, p.description, p.created_at,
+                      SELECT p.id, p.user_id, p.latitude, p.longitude, p.size_category, p.description,
+                             p.points, p.verified, p.fixed, p.created_at,
                              u.username AS reporter_username,
                              (SELECT COUNT(*) FROM pothole_confirmations c WHERE c.pothole_id = p.id) AS confirmation_count
                       FROM potholes p
@@ -87,7 +91,8 @@ function handlePotholes(?string $id, ?string $action, string $method): void
                     $stmt->execute([$lat, $lat, $lng, $radius]);
                 } else {
                     $stmt = $pdo->query('
-                      SELECT p.id, p.user_id, p.latitude, p.longitude, p.size_category, p.diameter_cm, p.description, p.created_at,
+                      SELECT p.id, p.user_id, p.latitude, p.longitude, p.size_category, p.description,
+                             p.points, p.verified, p.fixed, p.created_at,
                              u.username AS reporter_username,
                              (SELECT COUNT(*) FROM pothole_confirmations c WHERE c.pothole_id = p.id) AS confirmation_count
                       FROM potholes p
@@ -107,7 +112,7 @@ function handlePotholes(?string $id, ?string $action, string $method): void
                 echo json_encode(['error' => 'Not found']);
                 return;
             }
-            $userId = getCurrentUserId() ?? 1; // Public: fall back to user 1
+            $userId = getCurrentUserId() ?? 1;
             $input = json_decode(file_get_contents('php://input'), true) ?? [];
             $latitude = (float) ($input['latitude'] ?? 0);
             $longitude = (float) ($input['longitude'] ?? 0);
@@ -115,13 +120,14 @@ function handlePotholes(?string $id, ?string $action, string $method): void
             if (!in_array($size, ['small', 'medium', 'large'], true)) {
                 $size = 'medium';
             }
-            $diameter_cm = isset($input['diameter_cm']) ? (float) $input['diameter_cm'] : null;
+            $points = SIZE_POINTS[$size] ?? 8;
             $description = isset($input['description']) ? trim((string) $input['description']) : null;
-            $stmt = $pdo->prepare('INSERT INTO potholes (user_id, latitude, longitude, size_category, diameter_cm, description) VALUES (?, ?, ?, ?, ?, ?)');
-            $stmt->execute([$userId, $latitude, $longitude, $size, $diameter_cm, $description ?: null]);
+            $stmt = $pdo->prepare('INSERT INTO potholes (user_id, latitude, longitude, size_category, description, points) VALUES (?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$userId, $latitude, $longitude, $size, $description ?: null, $points]);
             $newId = (int) $pdo->lastInsertId();
             $stmt = $pdo->prepare('
-              SELECT p.id, p.user_id, p.latitude, p.longitude, p.size_category, p.diameter_cm, p.description, p.created_at, p.updated_at,
+              SELECT p.id, p.user_id, p.latitude, p.longitude, p.size_category, p.description,
+                     p.points, p.verified, p.fixed, p.created_at, p.updated_at,
                      u.username AS reporter_username,
                      0 AS confirmation_count
               FROM potholes p
@@ -131,6 +137,51 @@ function handlePotholes(?string $id, ?string $action, string $method): void
             $stmt->execute([$newId]);
             $row = $stmt->fetch();
             http_response_code(201);
+            echo json_encode(formatPotholeRow($row));
+            break;
+
+        case 'PUT':
+            if ($id === null) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Not found']);
+                return;
+            }
+            $input = json_decode(file_get_contents('php://input'), true) ?? [];
+            $fields = [];
+            $values = [];
+            if (isset($input['verified'])) {
+                $fields[] = 'verified = ?';
+                $values[] = (bool) $input['verified'] ? 1 : 0;
+            }
+            if (isset($input['fixed'])) {
+                $fields[] = 'fixed = ?';
+                $values[] = (bool) $input['fixed'] ? 1 : 0;
+            }
+            if (empty($fields)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Nothing to update']);
+                return;
+            }
+            $values[] = $id;
+            $sql = 'UPDATE potholes SET ' . implode(', ', $fields) . ' WHERE id = ?';
+            $pdo->prepare($sql)->execute($values);
+            // Return updated row
+            $stmt = $pdo->prepare('
+              SELECT p.id, p.user_id, p.latitude, p.longitude, p.size_category, p.description,
+                     p.points, p.verified, p.fixed, p.created_at, p.updated_at,
+                     u.username AS reporter_username,
+                     (SELECT COUNT(*) FROM pothole_confirmations c WHERE c.pothole_id = p.id) AS confirmation_count
+              FROM potholes p
+              JOIN users u ON u.id = p.user_id
+              WHERE p.id = ?
+            ');
+            $stmt->execute([$id]);
+            $row = $stmt->fetch();
+            if (!$row) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Pothole not found']);
+                return;
+            }
             echo json_encode(formatPotholeRow($row));
             break;
 
@@ -149,8 +200,10 @@ function formatPotholeRow(array $row): array
         'latitude' => (float) $row['latitude'],
         'longitude' => (float) $row['longitude'],
         'size_category' => $row['size_category'],
-        'diameter_cm' => $row['diameter_cm'] !== null ? (float) $row['diameter_cm'] : null,
         'description' => $row['description'] !== null && $row['description'] !== '' ? $row['description'] : null,
+        'points' => (int) ($row['points'] ?? 0),
+        'verified' => (bool) ($row['verified'] ?? false),
+        'fixed' => (bool) ($row['fixed'] ?? false),
         'confirmation_count' => isset($row['confirmation_count']) ? (int) $row['confirmation_count'] : 0,
         'created_at' => $row['created_at'],
         'updated_at' => $row['updated_at'] ?? null,

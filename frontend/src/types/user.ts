@@ -1,5 +1,8 @@
 export interface User {
-  name: string;
+  id: number;
+  username: string;
+  email: string;
   password: string;
+  reputation: number;
   is_moderator: boolean;
 }

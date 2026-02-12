@@ -41,34 +41,35 @@ function formatDate(iso: string): string {
   });
 }
 
+function sizeLabel(size: string): string {
+  return size.charAt(0).toUpperCase() + size.slice(1);
+}
+
 interface CraterMarkerProps {
   crater: Crater;
-  currentUser: string;
+  currentUsername: string;
   isModerator: boolean;
-  onToggleVerified: (id: string) => void;
-  onUpvote: (id: string) => void;
-  onDownvote: (id: string) => void;
-  onToggleFixed: (id: string) => void;
+  onToggleVerified: (id: number) => void;
+  onConfirm: (id: number) => void;
+  onToggleFixed: (id: number) => void;
 }
 
 export default function CraterMarker({
   crater,
-  currentUser,
+  currentUsername,
   isModerator,
   onToggleVerified,
-  onUpvote,
-  onDownvote,
+  onConfirm,
   onToggleFixed,
 }: CraterMarkerProps) {
-  const isOwn = crater.user === currentUser;
-  const net = crater.upvotes - crater.downvotes;
+  const isOwn = crater.reporter_username === currentUsername;
 
   return (
-    <Marker position={[crater.lat, crater.lng]} icon={createCraterIcon(crater)}>
+    <Marker position={[crater.latitude, crater.longitude]} icon={createCraterIcon(crater)}>
       <Popup className="crater-popup">
         <div className="crater-popup-content">
           <div className="crater-title-row">
-            <h3>{crater.type}</h3>
+            <h3>{sizeLabel(crater.size_category)}</h3>
             {crater.fixed && <span className="badge fixed">Fixed</span>}
           </div>
 
@@ -79,20 +80,19 @@ export default function CraterMarker({
             <span className="points">{crater.points} pts</span>
           </p>
 
-          <p className="crater-notes">{crater.notes}</p>
+          {crater.description && (
+            <p className="crater-notes">{crater.description}</p>
+          )}
 
-          {/* Vote row -- only for craters not owned by current user */}
+          {/* Confirm button -- only for craters not owned by current user */}
           {!isOwn && (
             <div className="vote-row">
-              <button className="vote-btn upvote" onClick={() => onUpvote(crater.id)} title="Upvote">
+              <button className="vote-btn upvote" onClick={() => onConfirm(crater.id)} title="Confirm this report">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="18 15 12 9 6 15" /></svg>
               </button>
-              <span className={`vote-count ${net > 0 ? 'positive' : net < 0 ? 'negative' : ''}`}>
-                {net >= 0 ? '+' : ''}{net}
+              <span className={`vote-count ${crater.confirmation_count > 0 ? 'positive' : ''}`}>
+                {crater.confirmation_count}
               </span>
-              <button className="vote-btn downvote" onClick={() => onDownvote(crater.id)} title="Downvote">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9" /></svg>
-              </button>
             </div>
           )}
 
@@ -109,9 +109,9 @@ export default function CraterMarker({
           </button>
 
           <p className="crater-footer">
-            Reported by <strong>{crater.user}</strong>
+            Reported by <strong>{crater.reporter_username}</strong>
             <br />
-            {formatDate(crater.datetime)}
+            {formatDate(crater.created_at)}
           </p>
         </div>
       </Popup>

@@ -1,66 +1,119 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Crater } from '../types/crater';
-import { CRATER_POINTS } from '../types/crater';
+import { SIZE_POINTS } from '../types/crater';
 import { mockCraters } from '../data/mockCraters';
+import * as api from '../api/client';
 
-export function useCraters(currentUser: string) {
+export function useCraters(currentUsername: string) {
   const [craters, setCraters] = useState<Crater[]>(mockCraters);
+  const [usingApi, setUsingApi] = useState(false);
+
+  // Try to load from API on mount, fall back to mock data
+  useEffect(() => {
+    api.fetchPotholes()
+      .then((data) => {
+        setCraters(data);
+        setUsingApi(true);
+      })
+      .catch(() => {
+        // API not available, keep mock data
+        setUsingApi(false);
+      });
+  }, []);
 
   const addCrater = useCallback(
-    (crater: Pick<Crater, 'lat' | 'lng' | 'type' | 'notes'>) => {
-      const newCrater: Crater = {
+    async (crater: Pick<Crater, 'latitude' | 'longitude' | 'size_category' | 'description'>) => {
+      if (usingApi) {
+        try {
+          const newCrater = await api.createPothole(crater);
+          setCraters((prev) => [newCrater, ...prev]);
+          return;
+        } catch {
+          // Fall through to local
+        }
+      }
+      // Local fallback
+      const localCrater: Crater = {
         ...crater,
-        id: crypto.randomUUID(),
-        datetime: new Date().toISOString(),
-        user: currentUser,
+        id: Date.now(),
+        user_id: 1,
+        reporter_username: currentUsername,
         verified: false,
-        points: CRATER_POINTS[crater.type] ?? 5,
-        upvotes: 0,
-        downvotes: 0,
         fixed: false,
+        points: SIZE_POINTS[crater.size_category] ?? 8,
+        confirmation_count: 0,
+        created_at: new Date().toISOString(),
       };
-      setCraters((prev) => [newCrater, ...prev]);
+      setCraters((prev) => [localCrater, ...prev]);
     },
-    [currentUser],
+    [currentUsername, usingApi],
   );
 
-  const toggleVerified = useCallback((id: string) => {
-    setCraters((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, verified: !c.verified } : c)),
-    );
-  }, []);
+  const toggleVerified = useCallback(
+    async (id: number) => {
+      const crater = craters.find((c) => c.id === id);
+      if (!crater) return;
+      if (usingApi) {
+        try {
+          const updated = await api.updatePothole(id, { verified: !crater.verified });
+          setCraters((prev) => prev.map((c) => (c.id === id ? updated : c)));
+          return;
+        } catch {
+          // Fall through
+        }
+      }
+      setCraters((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, verified: !c.verified } : c)),
+      );
+    },
+    [craters, usingApi],
+  );
 
-  const upvote = useCallback(
-    (id: string) => {
+  const confirm = useCallback(
+    async (id: number) => {
+      const crater = craters.find((c) => c.id === id);
+      if (!crater || crater.reporter_username === currentUsername) return;
+      if (usingApi) {
+        try {
+          await api.confirmPothole(id);
+          setCraters((prev) =>
+            prev.map((c) =>
+              c.id === id ? { ...c, confirmation_count: c.confirmation_count + 1 } : c,
+            ),
+          );
+          return;
+        } catch {
+          // Fall through
+        }
+      }
       setCraters((prev) =>
         prev.map((c) =>
-          c.id === id && c.user !== currentUser
-            ? { ...c, upvotes: c.upvotes + 1 }
-            : c,
+          c.id === id ? { ...c, confirmation_count: c.confirmation_count + 1 } : c,
         ),
       );
     },
-    [currentUser],
+    [craters, currentUsername, usingApi],
   );
 
-  const downvote = useCallback(
-    (id: string) => {
+  const toggleFixed = useCallback(
+    async (id: number) => {
+      const crater = craters.find((c) => c.id === id);
+      if (!crater) return;
+      if (usingApi) {
+        try {
+          const updated = await api.updatePothole(id, { fixed: !crater.fixed });
+          setCraters((prev) => prev.map((c) => (c.id === id ? updated : c)));
+          return;
+        } catch {
+          // Fall through
+        }
+      }
       setCraters((prev) =>
-        prev.map((c) =>
-          c.id === id && c.user !== currentUser
-            ? { ...c, downvotes: c.downvotes + 1 }
-            : c,
-        ),
+        prev.map((c) => (c.id === id ? { ...c, fixed: !c.fixed } : c)),
       );
     },
-    [currentUser],
+    [craters, usingApi],
   );
 
-  const toggleFixed = useCallback((id: string) => {
-    setCraters((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, fixed: !c.fixed } : c)),
-    );
-  }, []);
-
-  return { craters, addCrater, toggleVerified, upvote, downvote, toggleFixed };
+  return { craters, addCrater, toggleVerified, confirm, toggleFixed, usingApi };
 }

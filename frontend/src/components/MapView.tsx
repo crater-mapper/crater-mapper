@@ -8,12 +8,11 @@ interface MapViewProps {
   craters: Crater[];
   center: [number, number];
   flyTo: [number, number] | null;
-  currentUser: string;
+  currentUsername: string;
   isModerator: boolean;
-  onToggleVerified: (id: string) => void;
-  onUpvote: (id: string) => void;
-  onDownvote: (id: string) => void;
-  onToggleFixed: (id: string) => void;
+  onToggleVerified: (id: number) => void;
+  onConfirm: (id: number) => void;
+  onToggleFixed: (id: number) => void;
 }
 
 function FlyToHandler({ flyTo }: { flyTo: [number, number] | null }) {
@@ -32,11 +31,10 @@ export default function MapView({
   craters,
   center,
   flyTo,
-  currentUser,
+  currentUsername,
   isModerator,
   onToggleVerified,
-  onUpvote,
-  onDownvote,
+  onConfirm,
   onToggleFixed,
 }: MapViewProps) {
   return (
@@ -47,19 +45,18 @@ export default function MapView({
       zoomControl={false}
     >
       <TileLayer
-        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.stadiamaps.com/">Stadia</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+        url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
       />
       <FlyToHandler flyTo={flyTo} />
       {craters.map((crater) => (
         <CraterMarker
           key={crater.id}
           crater={crater}
-          currentUser={currentUser}
+          currentUsername={currentUsername}
           isModerator={isModerator}
           onToggleVerified={onToggleVerified}
-          onUpvote={onUpvote}
-          onDownvote={onDownvote}
+          onConfirm={onConfirm}
           onToggleFixed={onToggleFixed}
         />
       ))}
