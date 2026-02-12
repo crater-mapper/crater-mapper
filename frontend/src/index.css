@@ -1,0 +1,35 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #0a0a12;
+  --surface: #14141f;
+  --surface-hover: #1c1c2e;
+  --border: #2a2a3d;
+  --text: #e0dfe8;
+  --text-dim: #8888a0;
+  --accent: #6e6eff;
+  --accent-glow: rgba(110, 110, 255, 0.35);
+  --danger: #ff4455;
+  --warning: #ffaa33;
+  --safe: #88ccff;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
