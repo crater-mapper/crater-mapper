@@ -5,7 +5,7 @@ import { mockCraters } from '../data/mockCraters';
 import * as api from '../api/client';
 
 export function useCraters(currentUsername: string) {
-  const [craters, setCraters] = useState<Crater[]>(mockCraters);
+  const [craters, setCraters] = useState<Crater[]>([]);
   const [usingApi, setUsingApi] = useState(false);
 
   // Try to load from API on mount, fall back to mock data
@@ -16,7 +16,8 @@ export function useCraters(currentUsername: string) {
         setUsingApi(true);
       })
       .catch(() => {
-        // API not available, keep mock data
+        // API not available, use mock data
+        setCraters(mockCraters);
         setUsingApi(false);
       });
   }, []);

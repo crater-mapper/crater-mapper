@@ -2,32 +2,39 @@ import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import type { Crater } from '../types/crater';
 
-function severityColor(points: number): string {
-  if (points >= 10) return '#ff4444';
-  if (points >= 5) return '#ffaa33';
-  return '#88ccff';
+import hole1 from '../assets/hole1.png';
+import hole2 from '../assets/hole2.png';
+import hole3 from '../assets/hole3.png';
+import hole4 from '../assets/hole4.png';
+
+const holeImages = [hole1, hole2, hole3, hole4];
+
+// Severity colour tint: returns a CSS filter string
+// High points (>=10) -> red/warm, medium (>=5) -> orange, low -> blue/cool
+function severityFilter(points: number): string {
+  if (points >= 10) return 'hue-rotate(-15deg) saturate(2.2) brightness(1.1)';
+  if (points >= 5) return 'hue-rotate(15deg) saturate(1.6) brightness(1.15)';
+  return 'hue-rotate(170deg) saturate(1.4) brightness(1.3)';
 }
 
 function createCraterIcon(crater: Crater) {
-  const color = crater.fixed ? '#555566' : severityColor(crater.points);
-  const size = Math.min(18 + crater.points * 0.8, 36);
-  const opacity = crater.fixed ? 0.4 : 1;
+  const h = crater.fixed ? 44 : Math.min(40 + crater.points * 1.2, 64);
+  const w = h * 2; // 2x wider than tall
+  // Deterministic random pick based on crater id
+  const imgSrc = holeImages[crater.id % holeImages.length];
+  const filter = crater.fixed
+    ? 'grayscale(0.7) brightness(0.6)'
+    : severityFilter(crater.points);
+  const opacity = crater.fixed ? 0.45 : 1;
 
-  const svg = `
-    <svg width="${size}" height="${size}" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" opacity="${opacity}">
-      <circle cx="20" cy="20" r="18" fill="${color}" opacity="0.25" />
-      <circle cx="20" cy="20" r="13" fill="${color}" opacity="0.4" />
-      <circle cx="20" cy="20" r="8"  fill="${color}" opacity="0.8" />
-      <circle cx="20" cy="20" r="4"  fill="#fff" opacity="0.9" />
-    </svg>
-  `;
+  const html = `<img src="${imgSrc}" style="width:${w}px;height:${h}px;filter:${filter};opacity:${opacity};" />`;
 
   return L.divIcon({
-    html: svg,
-    className: 'crater-icon',
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-    popupAnchor: [0, -size / 2],
+    html,
+    className: 'crater-icon-img',
+    iconSize: [w, h],
+    iconAnchor: [w / 2, h / 2],
+    popupAnchor: [0, -h / 2],
   });
 }
 
