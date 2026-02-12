@@ -11,8 +11,8 @@ import './App.css';
 
 export default function App() {
   const { user, updateUser } = useUser();
-  const { craters, addCrater, toggleVerified, upvote, downvote, toggleFixed } =
-    useCraters(user.name);
+  const { craters, addCrater, toggleVerified, confirm, toggleFixed } =
+    useCraters(user.username);
   const { position, loaded } = useGeolocation();
   const [modalOpen, setModalOpen] = useState(false);
   const [flyTo, setFlyTo] = useState<[number, number] | null>(null);
@@ -20,6 +20,10 @@ export default function App() {
   const handleSelectLocation = useCallback((lat: number, lng: number) => {
     setFlyTo([lat, lng]);
   }, []);
+
+  const userPoints = craters
+    .filter((c) => c.reporter_username === user.username)
+    .reduce((sum, c) => sum + c.points, 0);
 
   if (!loaded) {
     return (
@@ -44,11 +48,10 @@ export default function App() {
         craters={craters}
         center={[position.lat, position.lng]}
         flyTo={flyTo}
-        currentUser={user.name}
+        currentUsername={user.username}
         isModerator={user.is_moderator}
         onToggleVerified={toggleVerified}
-        onUpvote={upvote}
-        onDownvote={downvote}
+        onConfirm={confirm}
         onToggleFixed={toggleFixed}
       />
 

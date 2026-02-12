@@ -35,13 +35,13 @@ export default function UserProfile({ user, onUpdate, points }: UserProfileProps
           <h3>Profile</h3>
 
           <label className="form-label">
-            Name
+            Username
             <input
               type="text"
-              value={user.name}
-              onChange={(e) => onUpdate({ name: e.target.value })}
+              value={user.username}
+              onChange={(e) => onUpdate({ username: e.target.value })}
               className="form-input"
-              placeholder="Your name"
+              placeholder="Your username"
             />
           </label>
 

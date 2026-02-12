@@ -2,8 +2,11 @@ import { useState, useCallback } from 'react';
 import type { User } from '../types/user';
 
 const DEFAULT_USER: User = {
-  name: 'mock-user',
+  id: 1,
+  username: 'mock-user',
+  email: 'mock@crater.map',
   password: '',
+  reputation: 0,
   is_moderator: false,
 };
 

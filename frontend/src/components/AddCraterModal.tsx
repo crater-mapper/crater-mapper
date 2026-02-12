@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { CRATER_TYPES, CRATER_POINTS } from '../types/crater';
+import { SIZE_CATEGORIES, SIZE_POINTS } from '../types/crater';
 import type { Crater } from '../types/crater';
 import 'leaflet/dist/leaflet.css';
 
@@ -16,7 +16,7 @@ const pinIcon = L.divIcon({
 
 interface AddCraterModalProps {
   center: [number, number];
-  onAdd: (crater: Pick<Crater, 'lat' | 'lng' | 'type' | 'notes'>) => void;
+  onAdd: (crater: Pick<Crater, 'latitude' | 'longitude' | 'size_category' | 'description'>) => void;
   onClose: () => void;
 }
 
@@ -39,12 +39,17 @@ function LocationPicker({
 export default function AddCraterModal({ center, onAdd, onClose }: AddCraterModalProps) {
   const [lat, setLat] = useState(center[0]);
   const [lng, setLng] = useState(center[1]);
-  const [type, setType] = useState<string>(CRATER_TYPES[0]);
-  const [notes, setNotes] = useState('');
+  const [sizeCategory, setSizeCategory] = useState<string>('medium');
+  const [description, setDescription] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd({ lat, lng, type, notes });
+    onAdd({
+      latitude: lat,
+      longitude: lng,
+      size_category: sizeCategory as 'small' | 'medium' | 'large',
+      description: description || null,
+    });
     onClose();
   };
 
@@ -85,21 +90,21 @@ export default function AddCraterModal({ center, onAdd, onClose }: AddCraterModa
           </div>
 
           <label className="form-label">
-            Type
-            <select value={type} onChange={(e) => setType(e.target.value)} className="form-select">
-              {CRATER_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t} ({CRATER_POINTS[t]} pts)
+            Size
+            <select value={sizeCategory} onChange={(e) => setSizeCategory(e.target.value)} className="form-select">
+              {SIZE_CATEGORIES.map((s) => (
+                <option key={s} value={s}>
+                  {s.charAt(0).toUpperCase() + s.slice(1)} ({SIZE_POINTS[s]} pts)
                 </option>
               ))}
             </select>
           </label>
 
           <label className="form-label">
-            Notes
+            Description
             <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="form-textarea"
               placeholder="Describe the crater..."
               rows={3}
