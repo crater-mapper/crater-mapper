@@ -30,8 +30,16 @@ export default function App() {
     );
   }
 
+  const userPoints = craters
+    .filter((c) => c.user === user.name)
+    .reduce((sum, c) => sum + c.points, 0);
+
   return (
     <div className="app">
+      <header className="app-header">
+        <h1>Crater Map</h1>
+      </header>
+
       <MapView
         craters={craters}
         center={[position.lat, position.lng]}
@@ -44,7 +52,7 @@ export default function App() {
         onToggleFixed={toggleFixed}
       />
 
-      <UserProfile user={user} onUpdate={updateUser} />
+      <UserProfile user={user} onUpdate={updateUser} points={userPoints} />
 
       <AddCraterButton onClick={() => setModalOpen(true)} />
 

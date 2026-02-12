@@ -5,6 +5,28 @@
   width: 100%;
 }
 
+/* ===== Header ===== */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 14px 20px;
+  background: linear-gradient(to bottom, var(--bg) 50%, transparent);
+  pointer-events: none;
+}
+
+.app-header h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+  text-shadow: 0 0 16px var(--orange-glow), 0 0 32px rgba(255, 140, 42, 0.15);
+}
+
 /* ===== Map ===== */
 .map-container {
   height: 100%;
@@ -35,7 +57,8 @@
   margin: 0 0 6px;
   font-size: 15px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
+  font-family: 'Orbitron', sans-serif;
 }
 
 .crater-meta {
@@ -46,12 +69,13 @@
 }
 
 .badge {
-  font-size: 11px;
+  font-size: 10px;
   padding: 2px 8px;
   border-radius: 999px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  font-family: 'Orbitron', sans-serif;
 }
 
 .badge.verified {
@@ -99,7 +123,7 @@
   height: 56px;
   border-radius: 50%;
   border: none;
-  background: var(--accent);
+  background: var(--orange);
   color: #fff;
   cursor: pointer;
   display: flex;
@@ -107,7 +131,7 @@
   justify-content: center;
   box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.4),
-    0 0 20px var(--accent-glow);
+    0 0 20px var(--orange-glow);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -115,7 +139,7 @@
   transform: scale(1.1);
   box-shadow:
     0 6px 24px rgba(0, 0, 0, 0.5),
-    0 0 30px var(--accent-glow);
+    0 0 30px var(--orange-glow);
 }
 
 .fab:active {
@@ -271,7 +295,8 @@
 .modal-header h2 {
   font-size: 17px;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.06em;
+  font-family: 'Orbitron', sans-serif;
 }
 
 .modal-close {
@@ -364,9 +389,10 @@
   border: none;
   border-radius: var(--radius-sm);
   padding: 12px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  font-family: inherit;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.06em;
   cursor: pointer;
   transition: background 0.2s, transform 0.15s;
   margin-top: 4px;
@@ -415,24 +441,46 @@
 }
 
 .user-avatar {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   border: 2px solid var(--border);
   background: var(--surface);
   color: var(--text);
-  font-size: 18px;
-  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 4px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .user-avatar:hover {
-  border-color: var(--accent);
-  box-shadow: 0 0 12px var(--accent-glow);
+  border-color: var(--orange);
+  box-shadow: 0 0 12px var(--orange-glow);
+}
+
+.rover-icon {
+  display: block;
+}
+
+.user-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-points {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--orange);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  white-space: nowrap;
+  text-shadow: 0 0 8px var(--orange-glow);
 }
 
 .user-panel {
@@ -454,8 +502,9 @@
 .user-panel h3 {
   font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
   margin: 0;
+  font-family: 'Orbitron', sans-serif;
 }
 
 .user-panel .form-label {
