@@ -5,7 +5,7 @@ interface GeoPosition {
   lng: number;
 }
 
-const DEFAULT_POSITION: GeoPosition = { lat: 40.7128, lng: -74.006 };
+const DEFAULT_POSITION: GeoPosition = { lat: 52.2405, lng: -0.9027 };
 
 export function useGeolocation() {
   const [position, setPosition] = useState<GeoPosition>(DEFAULT_POSITION);

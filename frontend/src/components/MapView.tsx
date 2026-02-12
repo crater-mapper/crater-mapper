@@ -8,6 +8,12 @@ interface MapViewProps {
   craters: Crater[];
   center: [number, number];
   flyTo: [number, number] | null;
+  currentUser: string;
+  isModerator: boolean;
+  onToggleVerified: (id: string) => void;
+  onUpvote: (id: string) => void;
+  onDownvote: (id: string) => void;
+  onToggleFixed: (id: string) => void;
 }
 
 function FlyToHandler({ flyTo }: { flyTo: [number, number] | null }) {
@@ -22,7 +28,17 @@ function FlyToHandler({ flyTo }: { flyTo: [number, number] | null }) {
   return null;
 }
 
-export default function MapView({ craters, center, flyTo }: MapViewProps) {
+export default function MapView({
+  craters,
+  center,
+  flyTo,
+  currentUser,
+  isModerator,
+  onToggleVerified,
+  onUpvote,
+  onDownvote,
+  onToggleFixed,
+}: MapViewProps) {
   return (
     <MapContainer
       center={center}
@@ -36,7 +52,16 @@ export default function MapView({ craters, center, flyTo }: MapViewProps) {
       />
       <FlyToHandler flyTo={flyTo} />
       {craters.map((crater) => (
-        <CraterMarker key={crater.id} crater={crater} />
+        <CraterMarker
+          key={crater.id}
+          crater={crater}
+          currentUser={currentUser}
+          isModerator={isModerator}
+          onToggleVerified={onToggleVerified}
+          onUpvote={onUpvote}
+          onDownvote={onDownvote}
+          onToggleFixed={onToggleFixed}
+        />
       ))}
     </MapContainer>
   );

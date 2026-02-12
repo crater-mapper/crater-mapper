@@ -8,6 +8,9 @@ export interface Crater {
   verified: boolean;
   notes: string;
   points: number;
+  upvotes: number;
+  downvotes: number;
+  fixed: boolean;
 }
 
 export const CRATER_TYPES = [
@@ -17,3 +20,11 @@ export const CRATER_TYPES = [
   'Erosion',
   'Collapsed Drain',
 ] as const;
+
+export const CRATER_POINTS: Record<string, number> = {
+  Pothole: 8,
+  Sinkhole: 10,
+  Crack: 3,
+  Erosion: 5,
+  'Collapsed Drain': 12,
+};

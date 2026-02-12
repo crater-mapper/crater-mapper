@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { CRATER_TYPES } from '../types/crater';
+import { CRATER_TYPES, CRATER_POINTS } from '../types/crater';
 import type { Crater } from '../types/crater';
 import 'leaflet/dist/leaflet.css';
 
@@ -16,7 +16,7 @@ const pinIcon = L.divIcon({
 
 interface AddCraterModalProps {
   center: [number, number];
-  onAdd: (crater: Omit<Crater, 'id' | 'datetime' | 'user' | 'verified'>) => void;
+  onAdd: (crater: Pick<Crater, 'lat' | 'lng' | 'type' | 'notes'>) => void;
   onClose: () => void;
 }
 
@@ -41,11 +41,10 @@ export default function AddCraterModal({ center, onAdd, onClose }: AddCraterModa
   const [lng, setLng] = useState(center[1]);
   const [type, setType] = useState<string>(CRATER_TYPES[0]);
   const [notes, setNotes] = useState('');
-  const [points, setPoints] = useState(5);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAdd({ lat, lng, type, notes, points });
+    onAdd({ lat, lng, type, notes });
     onClose();
   };
 
@@ -90,7 +89,7 @@ export default function AddCraterModal({ center, onAdd, onClose }: AddCraterModa
             <select value={type} onChange={(e) => setType(e.target.value)} className="form-select">
               {CRATER_TYPES.map((t) => (
                 <option key={t} value={t}>
-                  {t}
+                  {t} ({CRATER_POINTS[t]} pts)
                 </option>
               ))}
             </select>
@@ -104,18 +103,6 @@ export default function AddCraterModal({ center, onAdd, onClose }: AddCraterModa
               className="form-textarea"
               placeholder="Describe the crater..."
               rows={3}
-            />
-          </label>
-
-          <label className="form-label">
-            Points
-            <input
-              type="number"
-              value={points}
-              onChange={(e) => setPoints(Math.max(0, parseInt(e.target.value) || 0))}
-              className="form-input"
-              min={0}
-              max={100}
             />
           </label>
 
