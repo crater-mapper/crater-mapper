@@ -34,6 +34,10 @@ export default function App() {
     );
   }
 
+  const userPoints = craters
+    .filter((c) => c.user === user.name)
+    .reduce((sum, c) => sum + c.points, 0);
+
   return (
     <div className="app">
       <header className="app-header">
