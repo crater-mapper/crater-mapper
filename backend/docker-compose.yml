@@ -1,31 +1,13 @@
-version: '3.8'
 services:
-    updatecerts:
-        image: vjedev/certupdater:latest
-        volumes:
-            - certs:/certs
-            - mysqlconf:/mysqlconf
-    landingpage:
-        image: vjedev/landingpage:latest
-        volumes:
-            - ./websites:/websites
-    databaseimportexport:
-        image: vjedev/database-import-export:latest
-        volumes:
-            - ./websites:/websites
-        depends_on:
-            - mysql
     web:
         image: nginx:latest
         ports:
-            - "80:80"
-            - "443:443"
+            - "8080:80"
         volumes:
-            - ./nginx.conf:/etc/nginx/conf.d/nginx.conf
-            - certs:/certs
+            - ./nginx.conf:/etc/nginx/conf.d/default.conf
             - ./websites:/websites
         depends_on:
-            - updatecerts
+            - php
     php:
         build:
             context: .
@@ -42,30 +24,6 @@ services:
             - mysqldata:/var/lib/mysql
         ports:
             - 3306:3306
-    phpunit:
-        build:
-            context: .
-            dockerfile: PHP.Dockerfile
-        working_dir: /websites/default
-        entrypoint: 'vendor/bin/phpunit'
-        volumes:
-            - ./websites:/websites
-        profiles:
-            - phpunit
-    composer:
-        build:
-            context: .
-            dockerfile: PHP.Dockerfile
-        working_dir: /websites/default
-        entrypoint: /usr/bin/composer
-        volumes:
-            - ./websites:/websites
-        profiles:
-            - composer
-    maildev:
-        image: maildev/maildev:latest
 
 volumes:
     mysqldata: {}
-    certs: {}
-    mysqlconf: {}
