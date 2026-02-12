@@ -7,6 +7,7 @@ import UserProfile from './components/UserProfile';
 import { useCraters } from './hooks/useCraters';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useUser } from './hooks/useUser';
+import logo from './assets/logo1.png';
 import './App.css';
 
 export default function App() {
@@ -37,6 +38,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
+        <img src={logo} alt="Crater Map logo" className="app-logo" />
         <h1>Crater Map</h1>
       </header>
 
